@@ -1,10 +1,13 @@
 // utils/pricing.js
-const { VIP_COST } = require('../constants');
 
-function getVipCost(level) {
-    return VIP_COST[level] || 0; // Return 0 if level not found
+// Renamed from VIP_COST to GOLD_COST
+const { GOLD_COST } = require('../constants');
+
+// Renamed from getVipCost to getGoldCost
+function getGoldCost(level) {
+    return GOLD_COST[level] || 0; // Return 0 if level not found
 }
 
 module.exports = {
-    getVipCost
+    getGoldCost // Export new name
 };

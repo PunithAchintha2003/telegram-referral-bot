@@ -47,10 +47,103 @@ mongoose.connect(MONGODB_URI)
     process.exit(1); // Exit if DB connection fails
   });
 
+// --- Keyboard Definitions ---
+
+// Keyboard for regular users - UPDATED based on your requirements
+const userKeyboard = {
+    reply_markup: {
+        keyboard: [
+            [{ text: '💰 My Balance' }, { text: '👑 Buy Gold' }],
+            [{ text: '🔗 My Referrals' }, { text: '💳 Withdraw Funds' }],
+            [{ text: '🏦 Add Bank Details' }, { text: '❓ Support' }]
+        ],
+        resize_keyboard: true, // Make the keyboard smaller
+        one_time_keyboard: false // Keep the keyboard visible
+    }
+};
+
+
+// Keyboard for admins (remains unchanged from your provided code)
+const adminKeyboard = {
+    reply_markup: {
+        keyboard: [
+            [{ text: '/admin' }], // This button will show the admin menu text
+            [{ text: '/listslips' }, { text: '/pendingupgrades' }],
+            [{ text: '/withdrawals' }, { text: '/userstats' }] // Note: /userstats will become /userstatus in userCommands if not manually added to known texts
+        ],
+        resize_keyboard: true // Make the keyboard smaller
+    }
+};
+
+// Helper function to check if a user is an admin
+function isAdmin(userId) {
+    return adminIds.includes(userId);
+}
+
+
 // --- Register Bot Commands ---
 // Pass the bot instance and necessary configurations to command handlers
-registerAdminCommands(bot, adminIds); // Pass the parsed adminIds array
-registerUserCommands(bot, CHANNEL_USERNAME); // Pass CHANNEL_USERNAME for user commands verification
+// Pass the adminKeyboard to adminCommands
+registerAdminCommands(bot, adminIds, adminKeyboard);
+// Pass the isAdmin function and userKeyboard to userCommands
+registerUserCommands(bot, CHANNEL_USERNAME, isAdmin, userKeyboard);
+
+
+// --- /start command handler ---
+bot.onText(/\/start/, async (msg) => {
+    const chatId = msg.chat.id;
+    // IMPORTANT FIX: Convert telegramId to string immediately for consistency with DB
+    const telegramId = msg.from.id.toString();
+    const username = msg.from.username;
+    const fullName = msg.from.first_name + (msg.from.last_name ? ' ' + msg.from.last_name : '');
+
+    try {
+        // Query database using the string representation of telegramId
+        let user = await User.findOne({ telegramId });
+
+        if (!user) {
+            // New user, create an account
+            user = new User({
+                telegramId, // Use the string telegramId here
+                username,
+                fullName,
+                isVerified: false, // Default to unverified
+                balance: 0,
+                vipLevel: 0,
+                referralCode: Math.random().toString(36).substring(2, 10), // Generate a simple referral code
+                referredBy: null, // To be set if referred
+                paymentDetails: null, // Initialize payment details
+                withdrawals: [], // Initialize withdrawals array
+                depositHistory: [], // Initialize deposit history
+                upgradeHistory: [], // Initialize upgrade history
+                paymentSlip: {} // Initialize payment slip object
+            });
+            await user.save();
+            console.log(`New user registered: ${fullName} (${telegramId})`);
+
+            // Send welcome message and user keyboard
+            await bot.sendMessage(chatId,
+                `🎉 Welcome, ${fullName}! Your account has been created.`,
+                userKeyboard // Send user keyboard by default
+            );
+        } else {
+            // Existing user
+            await bot.sendMessage(chatId,
+                `👋 Welcome back, ${fullName}!`,
+                isAdmin(telegramId) ? adminKeyboard : userKeyboard // Conditional keyboard based on admin status
+            );
+        }
+    } catch (error) {
+        console.error('Error handling /start:', error);
+        // Check for duplicate key error specifically and provide a user-friendly message
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.telegramId) {
+            bot.sendMessage(chatId, 'It looks like you already have an account with us! Please use the menu buttons to continue.', userKeyboard);
+        } else {
+            bot.sendMessage(chatId, 'An error occurred while starting the bot. Please try again later.');
+        }
+    }
+});
+
 
 // --- Global Error Handling for Bot ---
 bot.on('polling_error', (error) => {

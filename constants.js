@@ -1,5 +1,7 @@
 // constants.js
-const VIP_COST = {
+
+// Renamed from VIP_COST to GOLD_COST
+const GOLD_COST = {
   1: 2000,
   2: 4000,
   3: 6000,
@@ -13,29 +15,31 @@ const VIP_COST = {
 };
 
 const WITHDRAWAL_FEE = 300;
-const MIN_WITHDRAWAL_AMOUNT = 1300;
+const MIN_WITHDRAWAL_AMOUNT = 1000;
 
-// Define VIP commission rates per level
-// This array represents the commission earned *when a referred user reaches that specific VIP level*.
-// The index corresponds to the VIP level minus one (e.g., index 0 for VIP 1, index 1 for VIP 2, etc.)
-// Adjust these values based on your actual business logic.
-const COMMISSION_RATES_PER_LEVEL = [
-    1000, // Commission for VIP 1
-    1000, // Commission for VIP 2
-    1500, // Commission for VIP 3
-    2000, // Commission for VIP 4
-    2500, // Commission for VIP 5
-    5000, // Commission for VIP 6
-    10000, // Commission for VIP 7
-    15000, // Commission for VIP 8
-    20000, // Commission for VIP 9
-    25000  // Commission for VIP 10
+// This array now represents the fixed commission *payout amounts*
+// for each Gold Level purchase, assuming the referrer is eligible.
+// The index corresponds to the Gold level minus one.
+const GOLD_COMMISSION_PAYOUTS = [
+    1000, // For Gold 1 (50% of 2000)
+    1000, // For Gold 2 (25% of 4000)
+    1500, // For Gold 3 (25% of 6000)
+    2000, // For Gold 4 (25% of 8000)
+    2500, // For Gold 5 (25% of 10000)
+    5000, // For Gold 6 (25% of 20000)
+    10000, // For Gold 7 (25% of 40000)
+    15000, // For Gold 8 (25% of 60000)
+    20000, // For Gold 9 (25% of 80000)
+    25000  // For Gold 10 (25% of 100000)
 ];
 
+// Add the support bot username here
+const SUPPORT_BOT_USERNAME = 'KGF_Help_bot'; // Your help bot's username
 
 module.exports = {
-  VIP_COST,
+  GOLD_COST,
   WITHDRAWAL_FEE,
   MIN_WITHDRAWAL_AMOUNT,
-  COMMISSION_RATES_PER_LEVEL, // Export the new constant
+  GOLD_COMMISSION_PAYOUTS,
+  SUPPORT_BOT_USERNAME, // Export it
 };

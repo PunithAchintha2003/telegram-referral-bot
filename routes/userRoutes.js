@@ -1,4 +1,5 @@
-// userRoutes.js
+// routes/userRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
@@ -22,9 +23,10 @@ router.post('/verify', async (req, res) => {
     else res.status(400).json(result);
 });
 
-router.post('/vip-request', async (req, res) => {
-    const { telegramId, requestedVipLevel, paymentSlipFileId } = req.body;
-    const result = await userController.vipRequest(telegramId, requestedVipLevel, paymentSlipFileId);
+// Renamed from vip-request to gold-purchase-request
+router.post('/gold-purchase-request', async (req, res) => {
+    const { telegramId, requestedGoldLevel, paymentSlipFileId } = req.body;
+    const result = await userController.goldPurchaseRequest(telegramId, requestedGoldLevel, paymentSlipFileId);
     if (result.success) res.json(result);
     else res.status(400).json(result);
 });
@@ -43,6 +45,7 @@ router.post('/update-payment-details', async (req, res) => {
     else res.status(400).json(result);
 });
 
+// Re-integrated /request-upgrade-balance route
 router.post('/request-upgrade-balance', async (req, res) => {
     const { telegramId, targetVIP } = req.body;
     const result = await userController.requestUpgradeFromBalance(telegramId, targetVIP);
@@ -59,12 +62,8 @@ router.get('/user/:telegramId', async (req, res) => {
 
 
 // Admin routes (should be protected by admin auth middleware in real use)
-// These would typically not be called by the bot itself, but by an external admin panel.
-// The bot's admin commands call userController functions directly.
-router.post('/admin/vip-approve', async (req, res) => {
+router.post('/admin/gold-approve', async (req, res) => { // Renamed
     const { userId, approve } = req.body;
-    // Note: The bot instance is not available here, this would need to be handled by a separate notification system
-    // if this API route is used for approval. For this project, the bot directly handles approval.
     res.status(501).json({ message: "This API route is not directly used for admin approval in this bot setup. Use bot commands." });
 });
 
@@ -73,6 +72,12 @@ router.post('/admin/withdrawal-process', async (req, res) => {
     const result = await userController.adminWithdrawalProcess(telegramId, withdrawalId, approve);
     if (result.success) res.json(result);
     else res.status(400).json(result);
+});
+
+// Re-integrated admin balance upgrade routes
+router.post('/admin/approve-upgrade', async (req, res) => {
+    const { userId, approve } = req.body;
+    res.status(501).json({ message: "This API route is not directly used for admin approval in this bot setup. Use bot commands." });
 });
 
 module.exports = router;
